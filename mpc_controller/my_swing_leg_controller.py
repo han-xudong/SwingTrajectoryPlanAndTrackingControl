@@ -16,7 +16,7 @@ import math
 
 import numpy as np
 from typing import Any, Mapping, Sequence, Tuple
-from mpc_controller import my_locomotion_controller_example
+from mpc_controller import my_swing_example
 from mpc_controller import gait_generator as gait_generator_lib
 from mpc_controller import leg_controller
 
@@ -277,7 +277,7 @@ class MySwingLegController(leg_controller.LegController):
     """
     foot_size = 0.02
     local_frame = np.array(local_frame_position).reshape(3)
-    world_frame = local_frame + np.array([0, 0, my_locomotion_controller_example._ROBOT_BASE_HEIGHT - foot_size])
+    world_frame = local_frame + np.array([0, 0, my_swing_example._ROBOT_BASE_HEIGHT - foot_size])
     return world_frame
 
   def get_optimized_foot_path(self, foot_start_positions, foot_target_positions, isSingleFRLeg=True):

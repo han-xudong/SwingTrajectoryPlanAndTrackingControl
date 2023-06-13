@@ -22,9 +22,8 @@ from mpc_controller import gait_generator as gait_generator_lib
 from mpc_controller import my_swing_leg_controller
 from mpc_controller import my_a1_sim as robot_sim
 
-
-_MAX_TIME_SECONDS = 10
 _RECORD_VIDEO = False #recording video requires ffmpeg in the path
+_MAX_TIME_SECONDS = 10
 _NUM_BULLET_SOLVER_ITERATIONS = 30
 _SIMULATION_TIME_STEP = 0.001
 _ROBOT_BASE_HEIGHT = 0.33
@@ -36,12 +35,14 @@ _PHASE_NUM = 500
 
 def _setup_controller(robot):
   """Demonstrates how to create a locomotion controller."""
+
   desired_speed = (0, 0)
   desired_twisting_speed = 0
   controller = my_swing_leg_controller.MySwingLegController(robot,
                                                             desired_speed=desired_speed,
                                                             desired_twisting_speed=desired_twisting_speed,
                                                             desired_height=robot_sim.MPC_BODY_HEIGHT)
+  
   return controller
 
 def _run_example(max_time=_MAX_TIME_SECONDS):
@@ -49,7 +50,8 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
 
   if _RECORD_VIDEO:
     p = pybullet
-    p.connect(p.GUI, options="--width=1280 --height=720 --mp4=\"test.mp4\" --mp4fps=100")
+    video_name = "my_swing_example_with_obstacle" if _WITH_OBSTACLE else "my_swing_example"
+    p.connect(p.GUI, options="--width=1280 --height=720 --mp4=\"%s.mp4\" --mp4fps=100"%video_name)
     p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING,1)
   else:
     p = bullet_client.BulletClient(connection_mode=pybullet.GUI)    
@@ -115,7 +117,9 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
                               -1,
                               p.JOINT_FIXED,
                               [0, 0, 0],
-                              [obstacle_pos[0], obstacle_pos[1], obstacle_size[2]],
+                              [obstacle_pos[0],
+                               obstacle_pos[1],
+                               obstacle_size[2]],
                               [0, 0, 0])
 
   foot_path = controller.get_foot_path(foot_init_positions,
