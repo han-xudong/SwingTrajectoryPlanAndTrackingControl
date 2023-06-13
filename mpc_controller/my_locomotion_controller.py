@@ -4,7 +4,6 @@ from __future__ import absolute_import
 from __future__ import division
 #from __future__ import google_type_annotations
 from __future__ import print_function
-
 import os
 import inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -21,15 +20,14 @@ class LocomotionController(object):
   individual subcomponent.
 
   """
-  def __init__(
-      self,
-      robot: Any,
-      gait_generator,
-      state_estimator,
-      swing_leg_controller,
-      stance_leg_controller,
-      clock,
-  ):
+
+  def __init__(self,
+               robot: Any,
+               gait_generator,
+               state_estimator,
+               swing_leg_controller,
+               stance_leg_controller,
+               clock):
     """Initializes the class.
 
     Args:
@@ -41,6 +39,7 @@ class LocomotionController(object):
       stance_leg_controller: Generates motor actions for stance legs.
       clock: A real or fake clock source.
     """
+
     self._robot = robot
     self._clock = clock
     self._reset_time = self._clock()
@@ -83,10 +82,9 @@ class LocomotionController(object):
 
   def get_action(self, foot_target_positions):
     """Returns the control ouputs (e.g. positions/torques) for all motors."""
+
     swing_action = self._swing_leg_controller.get_action(foot_target_positions)
-    # start_time = time.time()
     stance_action, qp_sol = self._stance_leg_controller.get_action()
-    # print(time.time() - start_time)
     action = []
     for joint_id in range(self._robot.num_motors):
       if joint_id in swing_action:

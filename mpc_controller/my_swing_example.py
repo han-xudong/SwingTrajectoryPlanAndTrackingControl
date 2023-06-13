@@ -10,15 +10,13 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 os.sys.path.insert(0, parentdir)
 from absl import app
-from absl import flags
-import scipy.interpolate
+# from absl import flags
+# import scipy.interpolate
 import numpy as np
 import pybullet_data as pd
 from pybullet_utils import bullet_client
 import time
 import pybullet
-import random
-from mpc_controller import gait_generator as gait_generator_lib
 from mpc_controller import my_swing_leg_controller
 from mpc_controller import my_a1_sim as robot_sim
 
@@ -32,6 +30,7 @@ _OBSTACLE_SIZE = [0.015, 1, 0.02] # thickness, width, height
 _OBSTACLE_POS = [0.175, 0, 0]
 _MAX_CLEARANCE = 0.02
 _PHASE_NUM = 500
+_NEED_OPTIMIZATION = True
 
 def _setup_controller(robot):
   """Demonstrates how to create a locomotion controller."""
@@ -50,7 +49,9 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
 
   if _RECORD_VIDEO:
     p = pybullet
-    video_name = "my_swing_example_with_obstacle" if _WITH_OBSTACLE else "my_swing_example"
+    video_name = "my_swing_example" + \
+                 "_with_obstacle_of_height_%.2f"%_OBSTACLE_SIZE[2] if _WITH_OBSTACLE else "my_swing_example" + \
+                 "_optimized" if _NEED_OPTIMIZATION else "_unoptimized"
     p.connect(p.GUI, options="--width=1280 --height=720 --mp4=\"%s.mp4\" --mp4fps=100"%video_name)
     p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING,1)
   else:
@@ -111,16 +112,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
                                     baseCollisionShapeIndex=collison_box_id,
                                     baseVisualShapeIndex=visual_shape_id,
                                     basePosition=[0.175, 0, 0])
-    cid1 = p.createConstraint(ground_id,
-                              -1,
-                              obstacle_id,
-                              -1,
-                              p.JOINT_FIXED,
-                              [0, 0, 0],
-                              [obstacle_pos[0],
-                               obstacle_pos[1],
-                               obstacle_size[2]],
-                              [0, 0, 0])
+    cid1 = p.createConstraint(ground_id, -1, obstacle_id, -1, p.JOINT_FIXED, [0, 0, 0], [obstacle_pos[0], obstacle_pos[1], obstacle_size[2]], [0, 0, 0])
 
   foot_path = controller.get_foot_path(foot_init_positions,
                                        foot_target_positions,
@@ -129,7 +121,8 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
                                        max_clearance=_MAX_CLEARANCE,
                                        phaseNum=_PHASE_NUM,
                                        isSingleFRLeg=True,
-                                       withObstacle=_WITH_OBSTACLE)
+                                       withObstacle=_WITH_OBSTACLE,
+                                       needOptimization=_NEED_OPTIMIZATION)
   np.savetxt('foot_path.txt', foot_path[:, 0, :], delimiter=',')
 
   init_time = time.time()

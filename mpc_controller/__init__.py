@@ -2,4 +2,3 @@ import my_swing_leg_controller
 import my_a1_sim
 import mpc_controller.my_swing_example as my_swing_example
 import my_locomotion_controller
-import gait_generator as gait_generator_lib

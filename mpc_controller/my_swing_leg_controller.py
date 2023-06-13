@@ -4,28 +4,18 @@ from __future__ import absolute_import
 from __future__ import division
 #from __future__ import google_type_annotations
 from __future__ import print_function
-
 import os
 import inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(os.path.dirname(currentdir))
 os.sys.path.insert(0, parentdir)
-
 import copy
+import bisect
 import math
-
 import numpy as np
 from typing import Any, Mapping, Sequence, Tuple
 from mpc_controller import my_swing_example
-from mpc_controller import gait_generator as gait_generator_lib
 from mpc_controller import leg_controller
-
-# The position correction coefficients in Raibert's formula.
-_KP = np.array([0.01, 0.01, 0.01]) * 3
-# At the end of swing, we leave a small clearance to prevent unexpected foot
-# collision.
-_FOOT_CLEARANCE_M = 0.01
-
 
 def _gen_parabola(phase: float, start: float, mid: float, end: float) -> float:
   """Gets a point on a parabola y = a x^2 + b x + c.
@@ -42,6 +32,7 @@ def _gen_parabola(phase: float, start: float, mid: float, end: float) -> float:
   Returns:
     The y value at x == phase.
   """
+
   mid_phase = 0.5
   delta_1 = mid - start
   delta_2 = end - start
@@ -63,11 +54,12 @@ def _gen_foot_path_trajectory(input_phase: float, start_pos: Sequence[float], en
   Returns:
     The desired foot position at the current phase.
   """
+
   phase = input_phase
-  if input_phase <= 0.5:
-    phase = 0.8 * math.sin(input_phase * math.pi)
-  else:
-    phase = 0.8 + (input_phase - 0.5) * 0.4
+  # if input_phase <= 0.5:
+  #   phase = 0.8 * math.sin(input_phase * math.pi)
+  # else:
+  #   phase = 0.8 + (input_phase - 0.5) * 0.4
 
   x = (1 - phase) * start_pos[0] + phase * end_pos[0]
   y = (1 - phase) * start_pos[1] + phase * end_pos[1]
@@ -77,99 +69,146 @@ def _gen_foot_path_trajectory(input_phase: float, start_pos: Sequence[float], en
   # PyType detects the wrong return type here.
   return (x, y, z)  # pytype: disable=bad-return-type
 
-def minimum_jerk_traj_gen(foot_path, time_allocation_vector):
-  phaseNum = len(foot_path) - 1
-  initial_pos = foot_path[0]
-  initial_vel = np.zeros(3)
-  initial_acc = np.zeros(3)
-  terminal_pos = foot_path[-1]
-  terminal_vel = np.zeros(3)
-  terminal_acc = np.zeros(3)
-  intermediate_positions = foot_path[1:-1]
+def select_points(a, n):
+    if n <= 0 or n > len(a):
+        raise ValueError('n must be between 1 and the length of the input array')
+    
+    step = (len(a) - 1)//(n - 1)
 
-  # Allocate the M, b matrices with zeros.
-  M = np.zeros((phaseNum*6, phaseNum*6))
-  b = np.zeros((phaseNum*6, 3))
+    indices = np.arange(0, len(a), step, dtype=int)
+    if len(indices) < n:
+        indices = np.append(indices, len(a)-1)
+    indices = indices[:n]
+    
+    return a[indices]
 
-  # Set the initial conditions.
-  F_0 = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 2]])
-  M[:3, :3] = F_0
+def find_insertion_index(arr, num):
+    return bisect.bisect_left(arr, num)
 
-  # Stacking initial position, velocity, and acceleration.
-  D_0 = np.vstack((initial_pos, initial_vel, initial_acc)).reshape(3,3)
-  b[:3, :] = D_0
+def minimum_jerk_traj_gen(piece_num,
+                          init_pos, init_vel, init_acc,
+                          target_pos, target_vel, target_acc,
+                          intermediate_positions, time_allocation_vector):
+    # Allocate the M, b matrices with zeros.
+    M = np.zeros((piece_num*6, piece_num*6))
+    b = np.zeros((piece_num*6, 3))
 
-  # Set the endpoint conditions.
-  t_m = time_allocation_vector[phaseNum-1]
-  E_M = np.array([
-      [1, t_m, t_m**2, t_m**3, t_m**4, t_m**5],
-      [0, 1, 2*t_m, 3*t_m**2, 4*t_m**3, 5*t_m**4],
-      [0, 0, 2, 6*t_m, 12*t_m**2, 20*t_m**3]
-  ])
-  M[phaseNum*6-3:phaseNum*6, phaseNum*6-6:phaseNum*6] = E_M
+    # Set the initial conditions.
+    F_0 = np.array([[1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 2]])
+    # print(F_0)
+    M[:3, :3] = F_0
 
-  # Stacking terminal position, velocity, and acceleration.
-  D_M = np.vstack((terminal_pos, terminal_vel, terminal_acc)).reshape(3,3)
-  b[phaseNum*6-3:phaseNum*6, :] = D_M
+    # Stacking initial position, velocity, and acceleration.
+    D_0 = np.vstack((init_pos, init_vel, init_acc)).reshape(3,3)
+    b[:3, :] = D_0
 
-  # Set the intermediate conditions.
-  for i in range(1, phaseNum):
-      t_i = time_allocation_vector[i-1]
-      E_i = np.array([
-          [1, t_i, t_i**2, t_i**3, t_i**4, t_i**5],
-          [1, t_i, t_i**2, t_i**3, t_i**4, t_i**5],
-          [0, 1, 2*t_i, 3*t_i**2, 4*t_i**3, 5*t_i**4],
-          [0, 0, 2, 6*t_i, 12*t_i**2, 20*t_i**3],
-          [0, 0, 0, 6, 24*t_i, 60*t_i**2],
-          [0, 0, 0, 0, 24, 120*t_i]
-      ])
+    # Set the endpoint conditions.
+    t_m = time_allocation_vector[piece_num-1]
+    E_M = np.array([[1,      t_m,    t_m**2,    t_m**3,    t_m**4,    t_m**5],
+                    [0,        1,     2*t_m,  3*t_m**2,  4*t_m**3,  5*t_m**4],
+                    [0,        0,         2,     6*t_m, 12*t_m**2, 20*t_m**3]
+    ])
+    M[piece_num*6-3:piece_num*6, piece_num*6-6:piece_num*6] = E_M
 
-      F_i = np.array([
-          [0, 0, 0, 0, 0, 0],
-          [-1, 0, 0, 0, 0, 0],
-          [0, -1, 0, 0, 0, 0],
-          [0, 0, -2, 0, 0, 0],
-          [0, 0, 0, -6, 0, 0],
-          [0, 0, 0, 0, -24, 0]
-      ])
+    # Stacking target position, velocity, and acceleration.
+    D_M = np.vstack((target_pos, target_vel, target_acc)).reshape(3,3)
+    b[piece_num*6-3:piece_num*6, :] = D_M
 
-      # Fetch the intermediate positions.
-      D_i = intermediate_positions[i-1,:].reshape(1,3)
+    # Set the intermediate conditions.
+    for i in range(1, piece_num):
+        t_i = time_allocation_vector[i-1]
+        E_i = np.array([[1,      t_i,    t_i**2,    t_i**3,    t_i**4,    t_i**5],
+                        [1,      t_i,    t_i**2,    t_i**3,    t_i**4,    t_i**5],
+                        [0,        1,     2*t_i,  3*t_i**2,  4*t_i**3,  5*t_i**4],
+                        [0,        0,         2,     6*t_i, 12*t_i**2, 20*t_i**3],
+                        [0,        0,         0,         6,    24*t_i, 60*t_i**2],
+                        [0,        0,         0,         0,        24,   120*t_i]])
 
-      M[3+(i-1)*6:i*6, (i-1)*6:i*6] = E_i
-      M[3+(i-1)*6:i*6, i*6:(i+1)*6] = F_i
-      b[3+(i-1)*6:3+(i-1)*6+1, :] = D_i
+        F_i = np.array([[ 0,   0,   0,   0,   0,   0],
+                        [-1,   0,   0,   0,   0,   0],
+                        [ 0,  -1,   0,   0,   0,   0],
+                        [ 0,   0,  -2,   0,   0,   0],
+                        [ 0,   0,   0,  -6,   0,   0],
+                        [ 0,   0,   0,   0, -24,   0]])
 
-  # Solve the equation system to get the coefficient matrix.
-  coefficient_matrix = np.linalg.inv(M).dot(b)
-  return coefficient_matrix
+        # Fetch the intermediate positions.
+        D_i = intermediate_positions[i-1,:].reshape(1,3)
+        # print("D_i is: ", D_i)
+        M[6*i-3:6*i+3, (i-1)*6:i*6] = E_i
+        M[6*i-3:6*i+3, 6*i:6*i+6] = F_i
+        b[6*i-3:6*i-2, :] = D_i
 
-def collision_check(foot_pos,
-                    leg_size,
-                    obstacle_pos,
-                    obstacle_size):
-    # Check the collision between the leg and the obstacle in XZ plane.
-    checkpoint_1_XZ = np.array([obstacle_pos[0] - obstacle_size[0] / 2, 
-                                obstacle_pos[2] + obstacle_size[2]])
-    checkpoint_2_XZ = np.array([obstacle_pos[0] + obstacle_size[0] / 2, 
-                                obstacle_pos[2] + obstacle_size[2]])
-    foot_pos_XZ = np.array([foot_pos[0], foot_pos[2]])
-    if np.linalg.norm(foot_pos_XZ - checkpoint_1_XZ) <= leg_size:
-        # print("Collision detected!")
-        return True
-    elif np.linalg.norm(foot_pos_XZ - checkpoint_2_XZ) <= leg_size:
-        # print("Collision detected!")
-        return True
-    return False
+    coefficient_matrix = np.linalg.inv(M)@b
+
+    return coefficient_matrix
+
+def optimizing_foot_path(all_proposed_points, time_allocation_vector, control_points_num, take_points_num):
+    """Relocate points
+
+    Args:
+      all_proposed_points: all points include the initial and target points
+      time_allocation_vector: time allocation vector includes the initial and target time
+      control_points_num: the number of control points used, including the initial and target points
+      take_points_num: the number of points to take, including the initial and target points
+    """
+
+    if control_points_num < 3:
+        raise ValueError("control_points_num should be equal or greater than 3")
+    
+    if take_points_num < 3:
+        raise ValueError("take_points_num should be equal or greater than 3")
+    
+    control_points = select_points(all_proposed_points, control_points_num)
+    control_time_vector = select_points(time_allocation_vector, control_points_num)
+    control_time_interval = control_time_vector[1] - control_time_vector[0]
+
+    coefficient_matrix = minimum_jerk_traj_gen(piece_num=control_points_num - 1,
+                                               init_pos=control_points[0,:],
+                                               init_vel=np.array([0, 0, 0]),
+                                               init_acc=np.array([0, 0, 0]),
+                                               target_pos=control_points[control_points_num-1,:],
+                                               target_vel=np.array([0, 0, 0]),
+                                               target_acc=np.array([0, 0, 0]),
+                                               intermediate_positions=control_points[1:control_points_num-1,:],
+                                               control_time_vector_relative=np.ones(control_points_num)*control_time_interval)
+    
+    opt_points = np.zeros((take_points_num, 3))
+    
+    for i in range(take_points_num):
+        t_abs = control_time_vector[-1]/take_points_num*i
+        j = find_insertion_index(control_time_vector, t_abs)
+        if j == 0:
+            j = 1
+        t = t_abs%control_time_interval
+        t_array = np.array([[1, t, t**2, t**3, t**4, t**5]]).reshape(1,6)
+
+        opt_points[i,0] = t_array @ coefficient_matrix[j*6-6:j*6,0]
+        opt_points[i,1] = t_array @ coefficient_matrix[j*6-6:j*6,1]
+        opt_points[i,2] = t_array @ coefficient_matrix[j*6-6:j*6,2]
+
+    return opt_points
+
+def collision_check(foot_pos, leg_size, obstacle_pos, obstacle_size):
+  """Check the collision between the leg and the obstacle in XZ plane."""
+  
+  checkpoint_1_XZ = np.array([obstacle_pos[0] - obstacle_size[0]/2, 
+                              obstacle_pos[2] + obstacle_size[2]])
+  checkpoint_2_XZ = np.array([obstacle_pos[0] + obstacle_size[0]/2, 
+                              obstacle_pos[2] + obstacle_size[2]])
+  foot_pos_XZ = np.array([foot_pos[0], foot_pos[2]])
+  if np.linalg.norm(foot_pos_XZ - checkpoint_1_XZ) <= leg_size:
+      # print("Collision detected!")
+      return True
+  elif np.linalg.norm(foot_pos_XZ - checkpoint_2_XZ) <= leg_size:
+      # print("Collision detected!")
+      return True
+  return False
 
 class MySwingLegController(leg_controller.LegController):
-  """Controls the swing leg position using Raibert's formula.
+  """Controls the swing leg position using Raibert's formula."""
 
-  For details, please refer to chapter 2 in "Legged robbots that balance" by
-  Marc Raibert. The key idea is to stablize the swing foot's location based on
-  the CoM moving speed.
-
-  """
   def __init__(self,
                robot: Any,
                desired_speed: np.ndarray,
@@ -211,22 +250,18 @@ class MySwingLegController(leg_controller.LegController):
                      max_clearance=0.05,
                      phaseNum=500):
     foot_path = np.zeros((phaseNum, 4, 3))
+
     for i in range(phaseNum):
       phase = i / phaseNum
       if isSingleFRLeg:
-        foot_path[i][0] = _gen_foot_path_trajectory(phase,
-                                                    foot_init_positions[0],
-                                                    foot_target_positions[0],
-                                                    max_clearance)
+        foot_path[i][0] = _gen_foot_path_trajectory(phase, foot_init_positions[0], foot_target_positions[0], max_clearance)
         foot_path[i][1] = foot_init_positions[1]
         foot_path[i][2] = foot_init_positions[2]
         foot_path[i][3] = foot_init_positions[3]
       else:
         for leg_id in range(4):
-          foot_path[i][leg_id] = _gen_foot_path_trajectory(phase,
-                                                           foot_init_positions[leg_id],
-                                                           foot_target_positions[leg_id],
-                                                           max_clearance)
+          foot_path[i][leg_id] = _gen_foot_path_trajectory(phase, foot_init_positions[leg_id], foot_target_positions[leg_id], max_clearance)
+    
     return foot_path
 
   def get_foot_path(self,
@@ -237,21 +272,19 @@ class MySwingLegController(leg_controller.LegController):
                     max_clearance=0.05,
                     phaseNum=500,
                     isSingleFRLeg=True,
-                    withObstacle=False):
+                    withObstacle=False,
+                    needOptimization=True):
     if not withObstacle:
-      return self._get_foot_path(foot_init_positions,
-                                 foot_target_positions,
-                                 isSingleFRLeg,
-                                 max_clearance=max_clearance,
-                                 phaseNum=phaseNum)
+      foot_path = self._get_foot_path(foot_init_positions, foot_target_positions, isSingleFRLeg, max_clearance=max_clearance, phaseNum=phaseNum)
+      if needOptimization:
+        return optimizing_foot_path(foot_path)
+      else:
+        return foot_path
+    
     isCollision = True
     leg_size = 0.03
     while isCollision:
-      foot_path = self._get_foot_path(foot_init_positions,
-                                      foot_target_positions,
-                                      isSingleFRLeg,
-                                      max_clearance=max_clearance,
-                                      phaseNum=phaseNum)
+      foot_path = self._get_foot_path(foot_init_positions, foot_target_positions, isSingleFRLeg, max_clearance=max_clearance, phaseNum=phaseNum)
       collision = False
       for foot_pos in foot_path[:, 0, :]:
         foot_pos_in_world_frame = self.foot_pos_in_world_frame_from_local_frame(foot_pos)
@@ -264,8 +297,10 @@ class MySwingLegController(leg_controller.LegController):
           break
       if not collision:
         isCollision = False
+    if needOptimization:
+      return optimizing_foot_path(foot_path)
     return foot_path
-
+  
   def foot_pos_in_world_frame_from_local_frame(self, local_frame_position):
     """Converts a local frame position to a world frame position.
 
@@ -279,13 +314,6 @@ class MySwingLegController(leg_controller.LegController):
     local_frame = np.array(local_frame_position).reshape(3)
     world_frame = local_frame + np.array([0, 0, my_swing_example._ROBOT_BASE_HEIGHT - foot_size])
     return world_frame
-
-  def get_optimized_foot_path(self, foot_start_positions, foot_target_positions, isSingleFRLeg=True):
-    foot_path = self.get_foot_path(foot_start_positions, foot_target_positions, isSingleFRLeg)
-    time_allocation_vector = np.linspace(0, 1, len(foot_path))
-    optimized_foot_path = foot_path
-    optimized_foot_path[:, 0, :] = minimum_jerk_traj_gen(foot_path[:, 0, :], time_allocation_vector)
-    return optimized_foot_path
 
   def get_action(self, foot_target_positions):
     _joint_angles = {}
