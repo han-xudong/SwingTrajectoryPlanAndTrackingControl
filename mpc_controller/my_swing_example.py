@@ -26,11 +26,11 @@ _NUM_BULLET_SOLVER_ITERATIONS = 30
 _SIMULATION_TIME_STEP = 0.001
 _ROBOT_BASE_HEIGHT = 0.33
 _WITH_OBSTACLE = True
-_OBSTACLE_SIZE = [0.015, 1, 0.02] # thickness, width, height
+_OBSTACLE_SIZE = [0.015, 1, 0.03] # thickness, width, height
 _OBSTACLE_POS = [0.175, 0, 0]
 _MAX_CLEARANCE = 0.02
 _PHASE_NUM = 500
-_NEED_OPTIMIZATION = True
+_WITH_OPTIMIZATION = True
 
 def _setup_controller(robot):
   """Demonstrates how to create a locomotion controller."""
@@ -51,7 +51,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
     p = pybullet
     video_name = "my_swing_example" + \
                  "_with_obstacle_of_height_%.2f"%_OBSTACLE_SIZE[2] if _WITH_OBSTACLE else "my_swing_example" + \
-                 "_optimized" if _NEED_OPTIMIZATION else "_unoptimized"
+                 "_optimized" if _WITH_OPTIMIZATION else "_unoptimized"
     p.connect(p.GUI, options="--width=1280 --height=720 --mp4=\"%s.mp4\" --mp4fps=100"%video_name)
     p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING,1)
   else:
@@ -114,16 +114,17 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
                                     basePosition=[0.175, 0, 0])
     cid1 = p.createConstraint(ground_id, -1, obstacle_id, -1, p.JOINT_FIXED, [0, 0, 0], [obstacle_pos[0], obstacle_pos[1], obstacle_size[2]], [0, 0, 0])
 
-  foot_path = controller.get_foot_path(foot_init_positions,
-                                       foot_target_positions,
+  foot_path = controller.get_foot_path(foot_init_positions=foot_init_positions,
+                                       foot_target_positions=foot_target_positions,
                                        obstacle_pos=obstacle_pos,
                                        obstacle_size=obstacle_size,
                                        max_clearance=_MAX_CLEARANCE,
-                                       phaseNum=_PHASE_NUM,
+                                       phase_num=_PHASE_NUM,
                                        isSingleFRLeg=True,
                                        withObstacle=_WITH_OBSTACLE,
-                                       needOptimization=_NEED_OPTIMIZATION)
-  np.savetxt('foot_path.txt', foot_path[:, 0, :], delimiter=',')
+                                       withOptimization=_WITH_OPTIMIZATION)
+  with open('foot_path.txt', 'w') as f:
+    np.savetxt(f, foot_path[:, 0, :], delimiter=',')
 
   init_time = time.time()
   while time.time() - init_time < 1:
@@ -149,7 +150,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
     with open('foot_real_path.txt', 'a') as f:
       np.savetxt(f, foot_current_position[0].reshape(1, 3), delimiter=',')
     foot_real_path_list.append(foot_current_position)
-    if foot_real_path_list.__len__() > 10:
+    if foot_real_path_list.__len__() > 1:
       p.addUserDebugLine(foot_real_path_list[-2][0],
                          foot_real_path_list[-1][0],
                          lineColorRGB=[1, 0, 0],

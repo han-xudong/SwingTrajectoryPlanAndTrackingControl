@@ -17,7 +17,7 @@ from typing import Any, Mapping, Sequence, Tuple
 from mpc_controller import my_swing_example
 from mpc_controller import leg_controller
 
-def _gen_parabola(phase: float, start: float, mid: float, end: float) -> float:
+def gen_parabola(phase: float, start: float, mid: float, end: float) -> float:
   """Gets a point on a parabola y = a x^2 + b x + c.
 
   The Parabola is determined by three points (0, start), (0.5, mid), (1, end) in
@@ -43,7 +43,7 @@ def _gen_parabola(phase: float, start: float, mid: float, end: float) -> float:
 
   return coef_a * phase**2 + coef_b * phase + coef_c
 
-def _gen_foot_path_trajectory(input_phase: float, start_pos: Sequence[float], end_pos: Sequence[float], max_clearance = 0.1):
+def gen_phase_foot_path_trajectory(input_phase: float, start_pos: Sequence[float], end_pos: Sequence[float], max_clearance = 0.1):
   """Generates the swing trajectory using a parabola.
 
   Args:
@@ -64,12 +64,14 @@ def _gen_foot_path_trajectory(input_phase: float, start_pos: Sequence[float], en
   x = (1 - phase) * start_pos[0] + phase * end_pos[0]
   y = (1 - phase) * start_pos[1] + phase * end_pos[1]
   mid = max(end_pos[2], start_pos[2]) + max_clearance
-  z = _gen_parabola(phase, start_pos[2], mid, end_pos[2])
+  z = gen_parabola(phase, start_pos[2], mid, end_pos[2])
 
   # PyType detects the wrong return type here.
   return (x, y, z)  # pytype: disable=bad-return-type
 
 def select_points(a, n):
+    """Selects n points from the input array a."""
+
     if n <= 0 or n > len(a):
         raise ValueError('n must be between 1 and the length of the input array')
     
@@ -88,7 +90,8 @@ def find_insertion_index(arr, num):
 def minimum_jerk_traj_gen(piece_num,
                           init_pos, init_vel, init_acc,
                           target_pos, target_vel, target_acc,
-                          intermediate_positions, time_allocation_vector):
+                          intermediate_positions,
+                          control_time_vector):
     # Allocate the M, b matrices with zeros.
     M = np.zeros((piece_num*6, piece_num*6))
     b = np.zeros((piece_num*6, 3))
@@ -105,7 +108,7 @@ def minimum_jerk_traj_gen(piece_num,
     b[:3, :] = D_0
 
     # Set the endpoint conditions.
-    t_m = time_allocation_vector[piece_num-1]
+    t_m = control_time_vector[piece_num-1]
     E_M = np.array([[1,      t_m,    t_m**2,    t_m**3,    t_m**4,    t_m**5],
                     [0,        1,     2*t_m,  3*t_m**2,  4*t_m**3,  5*t_m**4],
                     [0,        0,         2,     6*t_m, 12*t_m**2, 20*t_m**3]
@@ -118,7 +121,7 @@ def minimum_jerk_traj_gen(piece_num,
 
     # Set the intermediate conditions.
     for i in range(1, piece_num):
-        t_i = time_allocation_vector[i-1]
+        t_i = control_time_vector[i-1]
         E_i = np.array([[1,      t_i,    t_i**2,    t_i**3,    t_i**4,    t_i**5],
                         [1,      t_i,    t_i**2,    t_i**3,    t_i**4,    t_i**5],
                         [0,        1,     2*t_i,  3*t_i**2,  4*t_i**3,  5*t_i**4],
@@ -144,11 +147,11 @@ def minimum_jerk_traj_gen(piece_num,
 
     return coefficient_matrix
 
-def optimizing_foot_path(all_proposed_points, time_allocation_vector, control_points_num, take_points_num):
+def optimizing_foot_path(all_points, time_allocation_vector, control_points_num, take_points_num):
     """Relocate points
 
     Args:
-      all_proposed_points: all points include the initial and target points
+      all_points: all points include the initial and target points
       time_allocation_vector: time allocation vector includes the initial and target time
       control_points_num: the number of control points used, including the initial and target points
       take_points_num: the number of points to take, including the initial and target points
@@ -160,7 +163,7 @@ def optimizing_foot_path(all_proposed_points, time_allocation_vector, control_po
     if take_points_num < 3:
         raise ValueError("take_points_num should be equal or greater than 3")
     
-    control_points = select_points(all_proposed_points, control_points_num)
+    control_points = select_points(all_points, control_points_num)
     control_time_vector = select_points(time_allocation_vector, control_points_num)
     control_time_interval = control_time_vector[1] - control_time_vector[0]
 
@@ -172,7 +175,7 @@ def optimizing_foot_path(all_proposed_points, time_allocation_vector, control_po
                                                target_vel=np.array([0, 0, 0]),
                                                target_acc=np.array([0, 0, 0]),
                                                intermediate_positions=control_points[1:control_points_num-1,:],
-                                               control_time_vector_relative=np.ones(control_points_num)*control_time_interval)
+                                               control_time_vector=np.ones(control_points_num)*control_time_interval)
     
     opt_points = np.zeros((take_points_num, 3))
     
@@ -187,7 +190,8 @@ def optimizing_foot_path(all_proposed_points, time_allocation_vector, control_po
         opt_points[i,0] = t_array @ coefficient_matrix[j*6-6:j*6,0]
         opt_points[i,1] = t_array @ coefficient_matrix[j*6-6:j*6,1]
         opt_points[i,2] = t_array @ coefficient_matrix[j*6-6:j*6,2]
-
+    with open("foot_opt_path.txt", 'w') as f:
+       np.savetxt(f, opt_points)
     return opt_points
 
 def collision_check(foot_pos, leg_size, obstacle_pos, obstacle_size):
@@ -248,19 +252,21 @@ class MySwingLegController(leg_controller.LegController):
                      foot_target_positions,
                      isSingleFRLeg=True,
                      max_clearance=0.05,
-                     phaseNum=500):
-    foot_path = np.zeros((phaseNum, 4, 3))
+                     phase_num=500):
+    """Get the foot path trajectory."""
 
-    for i in range(phaseNum):
-      phase = i / phaseNum
+    foot_path = np.zeros((phase_num, 4, 3))
+
+    for i in range(phase_num):
+      phase = i / phase_num
       if isSingleFRLeg:
-        foot_path[i][0] = _gen_foot_path_trajectory(phase, foot_init_positions[0], foot_target_positions[0], max_clearance)
+        foot_path[i][0] = gen_phase_foot_path_trajectory(phase, foot_init_positions[0], foot_target_positions[0], max_clearance)
         foot_path[i][1] = foot_init_positions[1]
         foot_path[i][2] = foot_init_positions[2]
         foot_path[i][3] = foot_init_positions[3]
       else:
         for leg_id in range(4):
-          foot_path[i][leg_id] = _gen_foot_path_trajectory(phase, foot_init_positions[leg_id], foot_target_positions[leg_id], max_clearance)
+          foot_path[i][leg_id] = gen_phase_foot_path_trajectory(phase, foot_init_positions[leg_id], foot_target_positions[leg_id], max_clearance)
     
     return foot_path
 
@@ -270,21 +276,27 @@ class MySwingLegController(leg_controller.LegController):
                     obstacle_pos,
                     obstacle_size,
                     max_clearance=0.05,
-                    phaseNum=500,
+                    phase_num=500,
                     isSingleFRLeg=True,
                     withObstacle=False,
-                    needOptimization=True):
+                    withOptimization=True):
+    """Get the foot path from initial position to target position."""
+
     if not withObstacle:
-      foot_path = self._get_foot_path(foot_init_positions, foot_target_positions, isSingleFRLeg, max_clearance=max_clearance, phaseNum=phaseNum)
-      if needOptimization:
-        return optimizing_foot_path(foot_path)
+      foot_path = self._get_foot_path(foot_init_positions, foot_target_positions, isSingleFRLeg, max_clearance=max_clearance, phase_num=phase_num)
+      if withOptimization:
+        foot_path[:, 0, :] = optimizing_foot_path(all_points=foot_path[:, 0, :],
+                                                  time_allocation_vector=np.linspace(0, 1, phase_num),
+                                                  control_points_num=5,
+                                                  take_points_num=phase_num)
+        return foot_path
       else:
         return foot_path
     
     isCollision = True
     leg_size = 0.03
     while isCollision:
-      foot_path = self._get_foot_path(foot_init_positions, foot_target_positions, isSingleFRLeg, max_clearance=max_clearance, phaseNum=phaseNum)
+      foot_path = self._get_foot_path(foot_init_positions, foot_target_positions, isSingleFRLeg, max_clearance=max_clearance, phase_num=phase_num)
       collision = False
       for foot_pos in foot_path[:, 0, :]:
         foot_pos_in_world_frame = self.foot_pos_in_world_frame_from_local_frame(foot_pos)
@@ -297,8 +309,14 @@ class MySwingLegController(leg_controller.LegController):
           break
       if not collision:
         isCollision = False
-    if needOptimization:
-      return optimizing_foot_path(foot_path)
+    
+    if withOptimization:
+      foot_path[:, 0, :] = optimizing_foot_path(all_points=foot_path[:, 0, :],
+                                                time_allocation_vector=np.linspace(0, 1, phase_num),
+                                                control_points_num=5,
+                                                take_points_num=phase_num)
+      return foot_path
+    
     return foot_path
   
   def foot_pos_in_world_frame_from_local_frame(self, local_frame_position):
