@@ -202,16 +202,16 @@ def optimizing_foot_path(all_points, time_allocation_vector, control_points_num,
 def collision_check(foot_pos, leg_size, obstacle_pos, obstacle_size):
   """Check the collision between the leg and the obstacle in XZ plane."""
   
-  checkpoint_1_XZ = np.array([obstacle_pos[0] - obstacle_size[0]/2, 
+  checkpoint_1_XZ = np.array([obstacle_pos[0] - obstacle_size[0], 
                               obstacle_pos[2] + obstacle_size[2]])
-  checkpoint_2_XZ = np.array([obstacle_pos[0] + obstacle_size[0]/2, 
+  checkpoint_2_XZ = np.array([obstacle_pos[0] + obstacle_size[0], 
                               obstacle_pos[2] + obstacle_size[2]])
   foot_pos_XZ = np.array([foot_pos[0], foot_pos[2]])
   k = 0.5
-  if np.linalg.norm(foot_pos_XZ - checkpoint_1_XZ) <= leg_size + k * obstacle_size[0]:
+  if np.linalg.norm(foot_pos_XZ - checkpoint_1_XZ) <= leg_size + k * obstacle_size[2]:
       # print("Collision detected!")
       return True
-  elif np.linalg.norm(foot_pos_XZ - checkpoint_2_XZ) <= leg_size + k * obstacle_size[0]:
+  elif np.linalg.norm(foot_pos_XZ - checkpoint_2_XZ) <= leg_size + k * obstacle_size[2]:
       # print("Collision detected!")
       return True
   return False
@@ -317,7 +317,7 @@ class MySwingLegController(leg_controller.LegController):
         return foot_path
     
     isCollision = True
-    leg_size = 0.02
+    leg_size = 0.03
     while isCollision:
       foot_path = self._get_foot_path(foot_init_positions, foot_target_positions, isSingleFRLeg, max_clearance=max_clearance, phase_num=phase_num)
       collision = False

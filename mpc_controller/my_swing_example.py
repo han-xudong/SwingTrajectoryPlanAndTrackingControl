@@ -26,7 +26,7 @@ _NUM_BULLET_SOLVER_ITERATIONS = 30
 _SIMULATION_TIME_STEP = 0.001
 _ROBOT_BASE_HEIGHT = 0.33
 _WITH_OBSTACLE = True
-_OBSTACLE_SIZE = [0.015, 1, 0.03] # thickness, width, height
+_OBSTACLE_HALF_SIZE = [0.015, 1, 0.04] # thickness, width, height
 _OBSTACLE_POS = [0.175, 0, 0]
 _MAX_CLEARANCE = 0.02
 _PHASE_NUM = 500
@@ -35,8 +35,8 @@ _FOOT_STEP_DISP = np.array([[0.3,     0,    0],   #FR
                             [  0,     0,    0],   #FL
                             [  0,     0,    0],   #RR
                             [  0,     0,    0]])  #RL
-_PARAMETERS = "_disp_%.2f"%_FOOT_STEP_DISP[0, 0] + \
-              ("_obstacle_%.2f"%_OBSTACLE_SIZE[2] if _WITH_OBSTACLE else "") + \
+_PARAMETERS = "_disp_%.2f_%.2f"%(_FOOT_STEP_DISP[0, 0], _FOOT_STEP_DISP[0, 1]) + \
+              ("_obstacle_%.2f"%(_OBSTACLE_HALF_SIZE[2]*2) if _WITH_OBSTACLE else "") + \
               ("_optimized" if _WITH_OPTIMIZATION else "")
 _SAVE_PATH = "results/my_swing_example" + _PARAMETERS + "/"
 if os.path.exists(_SAVE_PATH) is False:
@@ -77,7 +77,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
   p.resetDebugVisualizerCamera(cameraDistance=0.45,
                                cameraYaw=0,
                                cameraPitch=0,
-                               cameraTargetPosition=[_OBSTACLE_POS[0], 0, 0.08])
+                               cameraTargetPosition=[_OBSTACLE_POS[0], 0, 0.1])
     
   planeShape = p.createCollisionShape(shapeType=p.GEOM_PLANE)
   ground_id  = p.createMultiBody(0, planeShape)
@@ -105,23 +105,23 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
     init_action = controller.get_action(foot_init_positions)
     robot.Step(init_action)
   
-  obstacle_size = _OBSTACLE_SIZE # thickness, width, height
+  obstacle_half_size = _OBSTACLE_HALF_SIZE # thickness, width, height
   obstacle_pos = _OBSTACLE_POS
   if _WITH_OBSTACLE:
     visual_shape_id = p.createVisualShape(shapeType=p.GEOM_BOX,
-                                          halfExtents=obstacle_size)
+                                          halfExtents=obstacle_half_size)
     collison_box_id = p.createCollisionShape(shapeType=p.GEOM_BOX,
-                                             halfExtents=obstacle_size)
+                                             halfExtents=obstacle_half_size)
     obstacle_id = p.createMultiBody(baseMass=10000,
                                     baseCollisionShapeIndex=collison_box_id,
                                     baseVisualShapeIndex=visual_shape_id,
                                     basePosition=[0.175, 0, 0])
-    cid1 = p.createConstraint(ground_id, -1, obstacle_id, -1, p.JOINT_FIXED, [0, 0, 0], [obstacle_pos[0], obstacle_pos[1], obstacle_size[2]], [0, 0, 0])
+    cid1 = p.createConstraint(ground_id, -1, obstacle_id, -1, p.JOINT_FIXED, [0, 0, 0], [obstacle_pos[0], obstacle_pos[1], obstacle_half_size[2]], [0, 0, 0])
 
   foot_path = controller.get_foot_path(foot_init_positions=foot_init_positions,
                                        foot_target_positions=foot_target_positions,
                                        obstacle_pos=obstacle_pos,
-                                       obstacle_size=obstacle_size,
+                                       obstacle_size=obstacle_half_size,
                                        max_clearance=_MAX_CLEARANCE,
                                        phase_num=_PHASE_NUM,
                                        isSingleFRLeg=True,
