@@ -20,21 +20,24 @@ import pybullet
 from mpc_controller import my_swing_leg_controller
 from mpc_controller import my_a1_sim as robot_sim
 
-_RECORD_VIDEO = False #recording video requires ffmpeg in the path
-_MAX_TIME_SECONDS = 10
+_RECORD_VIDEO = True #recording video requires ffmpeg in the path
+_MAX_TIME_SECONDS = 8
 _NUM_BULLET_SOLVER_ITERATIONS = 30
 _SIMULATION_TIME_STEP = 0.001
 _ROBOT_BASE_HEIGHT = 0.33
-_WITH_OBSTACLE = True
+_WITH_OBSTACLE = False
 _OBSTACLE_SIZE = [0.015, 1, 0.03] # thickness, width, height
 _OBSTACLE_POS = [0.175, 0, 0]
 _MAX_CLEARANCE = 0.02
 _PHASE_NUM = 500
-_WITH_OPTIMIZATION = True
-_FOOT_STEP_DISP = np.array([[0.3,     0,    0], #FR
-                            [  0,     0,    0], #FL
-                            [  0,     0,    0], #RR
-                            [  0,     0,    0]]) #RL
+_WITH_OPTIMIZATION = False
+_FOOT_STEP_DISP = np.array([[0.3,     0,    0],   #FR
+                            [  0,     0,    0],   #FL
+                            [  0,     0,    0],   #RR
+                            [  0,     0,    0]])  #RL
+_PARAMETERS = "_phase_num_%d"%_PHASE_NUM + \
+              ("_with_obstacle_of_height_%.2f"%_OBSTACLE_SIZE[2] if _WITH_OBSTACLE else "") + \
+              ("_optimized" if _WITH_OPTIMIZATION else "")
 
 def _setup_controller(robot):
   """Demonstrates how to create a locomotion controller."""
@@ -53,10 +56,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
 
   if _RECORD_VIDEO:
     p = pybullet
-    video_name = "my_swing_example" + \
-                 "_with_obstacle_of_height_%.2f"%_OBSTACLE_SIZE[2] if _WITH_OBSTACLE else "my_swing_example" + \
-                 "_optimized" if _WITH_OPTIMIZATION else "_unoptimized"
-    p.connect(p.GUI, options="--width=1280 --height=720 --mp4=\"%s.mp4\" --mp4fps=100"%video_name)
+    p.connect(p.GUI, options="--width=1280 --height=720 --mp4=\"my_swing_example%s.mp4\" --mp4fps=100"%_PARAMETERS)
     p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING,1)
   else:
     p = bullet_client.BulletClient(connection_mode=pybullet.GUI)
@@ -123,9 +123,8 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
                                        phase_num=_PHASE_NUM,
                                        isSingleFRLeg=True,
                                        withObstacle=_WITH_OBSTACLE,
-                                       withOptimization=_WITH_OPTIMIZATION)
-  # with open('foot_path.txt', 'w') as f:
-  #   np.savetxt(f, foot_path[:, 0, :], delimiter=',')
+                                       withOptimization=_WITH_OPTIMIZATION,
+                                       savetxt_parameters=_PARAMETERS)
 
   init_time = time.time()
   while time.time() - init_time < 1:
@@ -133,7 +132,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
     robot.Step(init_action)
   
   foot_current_position = np.array(robot.GetFootPositionsInWorldFrame())
-  with open('foot_real_path.txt', 'w') as f:
+  with open('foot_real_path%s.txt'%_PARAMETERS, 'w') as f:
     np.savetxt(f, foot_current_position[0].reshape(1, 3), delimiter=',')
   foot_real_path_list = [foot_current_position]
   cnt = 0

@@ -287,16 +287,30 @@ class MySwingLegController(leg_controller.LegController):
                     phase_num=500,
                     isSingleFRLeg=True,
                     withObstacle=False,
-                    withOptimization=True):
+                    withOptimization=True,
+                    savetxt_parameters=''):
     """Get the foot path from initial position to target position."""
+
+    if len(foot_init_positions) != 4 or len(foot_target_positions) != 4:
+      raise ValueError("The length of foot_init_positions and foot_target_positions must be 4, even if isSingleLeg is True.")
+    
+    if len(foot_init_positions[0]) != 3 or len(foot_target_positions[0]) != 3:
+      raise ValueError("The length of foot_init_positions[0] and foot_target_positions[0] must be 3.")
+    
+    if len(obstacle_pos) != 3 or len(obstacle_size) != 3:
+      raise ValueError("The length of obstacle_pos and obstacle_size must be 3.")
 
     if not withObstacle:
       foot_path = self._get_foot_path(foot_init_positions, foot_target_positions, isSingleFRLeg, max_clearance=max_clearance, phase_num=phase_num)
+      with open("foot_path%s.txt"%savetxt_parameters, 'w') as f:
+        np.savetxt(f, foot_path[:, 0, :], delimiter=',')
       if withOptimization:
         foot_path[:, 0, :] = optimizing_foot_path(all_points=foot_path[:, 0, :],
                                                   time_allocation_vector=np.linspace(0, 1, phase_num),
                                                   control_points_num=5,
                                                   take_points_num=phase_num)
+        with open("foot_opt_path%s.txt"%savetxt_parameters, 'w') as f:
+          np.savetxt(f, foot_path[:, 0, :], delimiter=',')
         return foot_path
       else:
         return foot_path
