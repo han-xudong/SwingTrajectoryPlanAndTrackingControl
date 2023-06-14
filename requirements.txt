@@ -9,4 +9,3 @@ tqdm
 numba
 quadprog
 inputs
-moviepy
