@@ -28,9 +28,9 @@ from mpc_controller import raibert_swing_leg_controller
 from mpc_controller import torque_stance_leg_controller_quadprog as torque_stance_leg_controller
 
 
-from motion_imitation.robots import a1
-from motion_imitation.robots import robot_config
-from motion_imitation.robots.gamepad import gamepad_reader
+# from motion_imitation.robots import a1
+# from motion_imitation.robots import robot_config
+# from motion_imitation.robots.gamepad import gamepad_reader
 
 flags.DEFINE_string("logdir", None, "where to log trajectories.")
 flags.DEFINE_bool("use_gamepad", False,
@@ -168,73 +168,73 @@ def main(argv):
   p.loadURDF("plane.urdf")
 
   # Construct robot class:
-  if FLAGS.use_real_robot:
-    from motion_imitation.robots import a1_robot
-    robot = a1_robot.A1Robot(
-        pybullet_client=p,
-        motor_control_mode=robot_config.MotorControlMode.HYBRID,
-        enable_action_interpolation=False,
-        time_step=0.002,
-        action_repeat=1)
-  else:
-    robot = a1.A1(p,
-                  motor_control_mode=robot_config.MotorControlMode.HYBRID,
-                  enable_action_interpolation=False,
-                  reset_time=2,
-                  time_step=0.002,
-                  action_repeat=1)
+  # if FLAGS.use_real_robot:
+  #   from motion_imitation.robots import a1_robot
+  #   robot = a1_robot.A1Robot(
+  #       pybullet_client=p,
+  #       motor_control_mode=robot_config.MotorControlMode.HYBRID,
+  #       enable_action_interpolation=False,
+  #       time_step=0.002,
+  #       action_repeat=1)
+  # else:
+  #   robot = a1.A1(p,
+  #                 motor_control_mode=robot_config.MotorControlMode.HYBRID,
+  #                 enable_action_interpolation=False,
+  #                 reset_time=2,
+  #                 time_step=0.002,
+  #                 action_repeat=1)
 
-  controller = _setup_controller(robot)
+  # controller = _setup_controller(robot)
 
-  controller.reset()
-  if FLAGS.use_gamepad:
-    gamepad = gamepad_reader.Gamepad()
-    command_function = gamepad.get_command
-  else:
-    command_function = _generate_example_linear_angular_speed
+  # controller.reset()
+  # if FLAGS.use_gamepad:
+  #   gamepad = gamepad_reader.Gamepad()
+  #   command_function = gamepad.get_command
+  # else:
+  #   command_function = _generate_example_linear_angular_speed
 
-  if FLAGS.logdir:
-    logdir = os.path.join(FLAGS.logdir,
-                          datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
-    os.makedirs(logdir)
+  # if FLAGS.logdir:
+  #   logdir = os.path.join(FLAGS.logdir,
+  #                         datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
+  #   os.makedirs(logdir)
 
-  start_time = robot.GetTimeSinceReset()
-  current_time = start_time
-  com_vels, imu_rates, actions = [], [], []
-  while current_time - start_time < FLAGS.max_time_secs:
-    #time.sleep(0.0008) #on some fast computer, works better with sleep on real A1?
-    start_time_robot = current_time
-    start_time_wall = time.time()
-    # Updates the controller behavior parameters.
-    lin_speed, ang_speed, e_stop = command_function(current_time)
-    # print(lin_speed)
-    if e_stop:
-      logging.info("E-stop kicked, exiting...")
-      break
-    _update_controller_params(controller, lin_speed, ang_speed)
-    controller.update()
-    hybrid_action, _ = controller.get_action()
-    com_vels.append(np.array(robot.GetBaseVelocity()).copy())
-    imu_rates.append(np.array(robot.GetBaseRollPitchYawRate()).copy())
-    actions.append(hybrid_action)
-    robot.Step(hybrid_action)
-    current_time = robot.GetTimeSinceReset()
+  # start_time = robot.GetTimeSinceReset()
+  # current_time = start_time
+  # com_vels, imu_rates, actions = [], [], []
+  # while current_time - start_time < FLAGS.max_time_secs:
+  #   #time.sleep(0.0008) #on some fast computer, works better with sleep on real A1?
+  #   start_time_robot = current_time
+  #   start_time_wall = time.time()
+  #   # Updates the controller behavior parameters.
+  #   lin_speed, ang_speed, e_stop = command_function(current_time)
+  #   # print(lin_speed)
+  #   if e_stop:
+  #     logging.info("E-stop kicked, exiting...")
+  #     break
+  #   _update_controller_params(controller, lin_speed, ang_speed)
+  #   controller.update()
+  #   hybrid_action, _ = controller.get_action()
+  #   com_vels.append(np.array(robot.GetBaseVelocity()).copy())
+  #   imu_rates.append(np.array(robot.GetBaseRollPitchYawRate()).copy())
+  #   actions.append(hybrid_action)
+  #   robot.Step(hybrid_action)
+  #   current_time = robot.GetTimeSinceReset()
 
-    if not FLAGS.use_real_robot:
-      expected_duration = current_time - start_time_robot
-      actual_duration = time.time() - start_time_wall
-      if actual_duration < expected_duration:
-        time.sleep(expected_duration - actual_duration)
-    print("actual_duration=", actual_duration)
-  if FLAGS.use_gamepad:
-    gamepad.stop()
+  #   if not FLAGS.use_real_robot:
+  #     expected_duration = current_time - start_time_robot
+  #     actual_duration = time.time() - start_time_wall
+  #     if actual_duration < expected_duration:
+  #       time.sleep(expected_duration - actual_duration)
+  #   print("actual_duration=", actual_duration)
+  # if FLAGS.use_gamepad:
+  #   gamepad.stop()
 
-  if FLAGS.logdir:
-    np.savez(os.path.join(logdir, 'action.npz'),
-             action=actions,
-             com_vels=com_vels,
-             imu_rates=imu_rates)
-    logging.info("logged to: {}".format(logdir))
+  # if FLAGS.logdir:
+  #   np.savez(os.path.join(logdir, 'action.npz'),
+  #            action=actions,
+  #            com_vels=com_vels,
+  #            imu_rates=imu_rates)
+  #   logging.info("logged to: {}".format(logdir))
 
 
 if __name__ == "__main__":
