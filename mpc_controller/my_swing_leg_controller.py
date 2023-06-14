@@ -197,8 +197,6 @@ def optimizing_foot_path(all_points, time_allocation_vector, control_points_num,
       opt_points[i*int(take_points_num/(control_points_num-1)), :] = opt_points[i*int(take_points_num/(control_points_num-1)) - 1, :]
     opt_points[-1,:] = all_points[-1,:]
 
-    with open("foot_opt_path.txt", 'w') as f:
-      np.savetxt(f, opt_points, delimiter=',')
     return opt_points
 
 def collision_check(foot_pos, leg_size, obstacle_pos, obstacle_size):
@@ -288,6 +286,7 @@ class MySwingLegController(leg_controller.LegController):
                     isSingleFRLeg=True,
                     withObstacle=False,
                     withOptimization=True,
+                    save_path='',
                     savetxt_parameters=''):
     """Get the foot path from initial position to target position."""
 
@@ -300,16 +299,18 @@ class MySwingLegController(leg_controller.LegController):
     if len(obstacle_pos) != 3 or len(obstacle_size) != 3:
       raise ValueError("The length of obstacle_pos and obstacle_size must be 3.")
 
+    control_points_num = 3
+
     if not withObstacle:
       foot_path = self._get_foot_path(foot_init_positions, foot_target_positions, isSingleFRLeg, max_clearance=max_clearance, phase_num=phase_num)
-      with open("foot_path%s.txt"%savetxt_parameters, 'w') as f:
+      with open("%sfoot_path%s.txt"%(save_path, savetxt_parameters), 'w') as f:
         np.savetxt(f, foot_path[:, 0, :], delimiter=',')
       if withOptimization:
         foot_path[:, 0, :] = optimizing_foot_path(all_points=foot_path[:, 0, :],
                                                   time_allocation_vector=np.linspace(0, 1, phase_num),
-                                                  control_points_num=5,
+                                                  control_points_num=control_points_num,
                                                   take_points_num=phase_num)
-        with open("foot_opt_path%s.txt"%savetxt_parameters, 'w') as f:
+        with open("%sfoot_opt_path%s.txt"%(save_path, savetxt_parameters), 'w') as f:
           np.savetxt(f, foot_path[:, 0, :], delimiter=',')
         return foot_path
       else:
@@ -331,13 +332,15 @@ class MySwingLegController(leg_controller.LegController):
           break
       if not collision:
         isCollision = False
-    with open('foot_path.txt', 'w') as f:
+    with open("%sfoot_path%s.txt"%(save_path, savetxt_parameters), 'w') as f:
       np.savetxt(f, foot_path[:, 0, :], delimiter=',')
     if withOptimization:
       foot_path[:, 0, :] = optimizing_foot_path(all_points=foot_path[:, 0, :],
                                                 time_allocation_vector=np.linspace(0, 1, phase_num, endpoint=False) + 1/phase_num,
-                                                control_points_num=5,
+                                                control_points_num=control_points_num,
                                                 take_points_num=phase_num)
+      with open("%sfoot_opt_path%s.txt"%(save_path, savetxt_parameters), 'w') as f:
+        np.savetxt(f, foot_path[:, 0, :], delimiter=',')
       return foot_path
     
     return foot_path

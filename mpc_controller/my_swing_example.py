@@ -30,14 +30,17 @@ _OBSTACLE_SIZE = [0.015, 1, 0.03] # thickness, width, height
 _OBSTACLE_POS = [0.175, 0, 0]
 _MAX_CLEARANCE = 0.02
 _PHASE_NUM = 500
-_WITH_OPTIMIZATION = False
-_FOOT_STEP_DISP = np.array([[0.3,     0,    0],   #FR
+_WITH_OPTIMIZATION = True
+_FOOT_STEP_DISP = np.array([[0.2,     0,    0],   #FR
                             [  0,     0,    0],   #FL
                             [  0,     0,    0],   #RR
                             [  0,     0,    0]])  #RL
-_PARAMETERS = "_phase_num_%d"%_PHASE_NUM + \
-              ("_with_obstacle_of_height_%.2f"%_OBSTACLE_SIZE[2] if _WITH_OBSTACLE else "") + \
+_PARAMETERS = "_disp_%.2f"%_FOOT_STEP_DISP[0, 0] + \
+              ("_obstacle_%.2f"%_OBSTACLE_SIZE[2] if _WITH_OBSTACLE else "") + \
               ("_optimized" if _WITH_OPTIMIZATION else "")
+_SAVE_PATH = "results/my_swing_example" + _PARAMETERS + "/"
+if os.path.exists(_SAVE_PATH) is False:
+  os.makedirs(_SAVE_PATH)
 
 def _setup_controller(robot):
   """Demonstrates how to create a locomotion controller."""
@@ -56,7 +59,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
 
   if _RECORD_VIDEO:
     p = pybullet
-    p.connect(p.GUI, options="--width=1280 --height=720 --mp4=\"my_swing_example%s.mp4\" --mp4fps=100"%_PARAMETERS)
+    p.connect(p.GUI, options="--width=1280 --height=720 --mp4=\"%smy_swing_example%s.mp4\" --mp4fps=100"%(_SAVE_PATH, _PARAMETERS))
     p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING,1)
   else:
     p = bullet_client.BulletClient(connection_mode=pybullet.GUI)
@@ -124,6 +127,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
                                        isSingleFRLeg=True,
                                        withObstacle=_WITH_OBSTACLE,
                                        withOptimization=_WITH_OPTIMIZATION,
+                                       save_path=_SAVE_PATH,
                                        savetxt_parameters=_PARAMETERS)
 
   init_time = time.time()
@@ -132,7 +136,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
     robot.Step(init_action)
   
   foot_current_position = np.array(robot.GetFootPositionsInWorldFrame())
-  with open('foot_real_path%s.txt'%_PARAMETERS, 'w') as f:
+  with open('%sfoot_real_path%s.txt'%(_SAVE_PATH, _PARAMETERS), 'w') as f:
     np.savetxt(f, foot_current_position[0].reshape(1, 3), delimiter=',')
   foot_real_path_list = [foot_current_position]
   cnt = 0
@@ -147,7 +151,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
     robot.Step(actions)
     
     foot_current_position = np.array(robot.GetFootPositionsInWorldFrame())
-    with open('foot_real_path.txt', 'a') as f:
+    with open('%sfoot_real_path%s.txt'%(_SAVE_PATH, _PARAMETERS), 'a') as f:
       np.savetxt(f, foot_current_position[0].reshape(1, 3), delimiter=',')
     foot_real_path_list.append(foot_current_position)
     if foot_real_path_list.__len__() > 1:
