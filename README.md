@@ -19,7 +19,9 @@ You can run `mpc_controller/my_swing_example.py` to get a quickstart.
 
 ## Finding a feasible trajectory connecting the initial and final positions
 
-We give a method to find a feasible swing trajectory when given an initial and final position of the foot tip. And we also design a tracking controller to track the planned trajectory.
+We give a method to find a feasible swing trajectory when given an initial and final position of the foot tip. And we also design a tracking controller to track the planned trajectory. To simplify, we only consider the single FR leg.
+
+In `mpc_controller/my_swing_example.py`, the initial position of the foot is $(0, 0, 0)$, and the final position is based on `_FOOT_STEP_DISP` which is a $(4, 3)$ matrix describing all 4 foot displacements.
 
 ## Finding a collision-free trajectory when there are known obstacles
 
