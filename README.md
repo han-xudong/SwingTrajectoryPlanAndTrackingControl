@@ -76,6 +76,11 @@ The following figures show the swing trajectories with different foot displaceme
 
 ![swing_trajectory_1](./results/my_swing_example_disp_0.10_-0.10_optimized/path_disp_0.10_-0.10_optimized.png)![swing_trajectory_2](./results/my_swing_example_disp_0.10_0.00_optimized/path_disp_0.10_0.00_optimized.png)![swing_trajectory_3](./results/my_swing_example_disp_0.10_0.10_optimized/path_disp_0.10_0.10_optimized.png)
 
+<center class="half">
+<img src="https://img-blog.csdnimg.cn/2019012511060017.png" width=00/>
+<img src="https://img-blog.csdnimg.cn/2019012511060017.png" width=200/>
+</center>
+
 ![swing_trajectory_4](./results/my_swing_example_disp_0.20_-0.10_optimized/path_disp_0.20_-0.10_optimized.png)![swing_trajectory_5](./results/my_swing_example_disp_0.20_0.00_optimized/path_disp_0.20_0.00_optimized.png)![swing_trajectory_6](./results/my_swing_example_disp_0.20_0.10_optimized/path_disp_0.20_0.10_optimized.png)
 
 ![swing_trajectory_7](./results/my_swing_example_disp_0.30_-0.10_optimized/path_disp_0.30_-0.10_optimized.png)![swing_trajectory_8](./results/my_swing_example_disp_0.30_0.00_optimized/path_disp_0.30_0.00_optimized.png)![swing_trajectory_9](./results/my_swing_example_disp_0.30_0.10_optimized/path_disp_0.30_0.10_optimized.png)
