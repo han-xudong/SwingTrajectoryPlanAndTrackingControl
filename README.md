@@ -8,44 +8,45 @@ The codes are based on: <https://xbpeng.github.io/projects/Robotic_Imitation/ind
 
 We use this repository with Python 3.7 or Python 3.8 on Ubuntu, MacOS and Windows.
 
-- Install MPC extension (Optional) `python3 setup.py install --user`
-
 Install dependencies:
 
+- Install MPC extension (Optional) `python3 setup.py install --user`
+
 - Install MPI: `sudo apt install libopenmpi-dev`
+
 - Install requirements: `pip3 install -r requirements.txt`
 
 You can run `mpc_controller/my_swing_example.py` to get a quickstart.
 
 Here are the definitions of the importtant varibles in `mpc_controller/my_swing_example.py`:
 
-`_RECORD_VIDEO`: `True` or `False` to record a video of the simulation process or not, which requires ffmpeg in the path.
+- `_RECORD_VIDEO`: `True` or `False` to record a video of the simulation process or not, which requires ffmpeg in the path.
 
-`_MAX_TIME_SECONDS`: the maximum running time (seconds) of the simulatioin process.
+- `_MAX_TIME_SECONDS`: the maximum running time (seconds) of the simulatioin process.
 
-`_NUM_BULLET_SOLVER_ITERATIONS`: the number of iterations of the bullet solver.
+- `_NUM_BULLET_SOLVER_ITERATIONS`: the number of iterations of the bullet solver.
 
-`_SIMULATION_TIME_STEP`: the time step of the simulation.
+- `_SIMULATION_TIME_STEP`: the time step of the simulation.
 
-`_ROBOT_BASE_HEIGHT`: the fixed height of the robot base.
+- `_ROBOT_BASE_HEIGHT`: the fixed height of the robot base.
 
-`_WITH_OBSTACLE`: `True` or `False` to show an obstacle or not.
+- `_WITH_OBSTACLE`: `True` or `False` to show an obstacle or not.
 
-`_OBSTACLE_HALF_SIZE`: the half size of the obstacle.
+- `_OBSTACLE_HALF_SIZE`: the half size of the obstacle.
 
-`_OBSTACLE_POS`: the position of the obstacle.
+- `_OBSTACLE_POS`: the position of the obstacle.
 
-`_MAX_CLEARANCE`: the maximum clearance of the foot path to the ground.
+- `_MAX_CLEARANCE`: the maximum clearance of the foot path to the ground.
 
-`_PHASE_NUM`: the number of the phases of the swing trajectory.
+- `_PHASE_NUM`: the number of the phases of the swing trajectory.
 
-`_WITH_OPTIMIZATION`: `True` or `False` to use the optimization method or not.
+- `_WITH_OPTIMIZATION`: `True` or `False` to use the optimization method or not.
 
-`_FOOT_STEP_DISP`: the displacement matrix (4x3) of the 4 foot steps.
+- `_FOOT_STEP_DISP`: the displacement matrix (4x3) of the 4 foot steps.
 
-`_PARAMETERS`: collection of the parameters of the swing trajectory to be saved as the name of the result file.
+- `_PARAMETERS`: collection of the parameters of the swing trajectory to be saved as the name of the result file.
 
-`_SAVE_PATH`: the path to save the result file.
+- `_SAVE_PATH`: the path to save the result file.
 
 ## Finding a feasible trajectory connecting the initial and final positions
 
