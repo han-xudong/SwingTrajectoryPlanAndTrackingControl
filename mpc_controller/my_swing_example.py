@@ -31,6 +31,10 @@ _OBSTACLE_POS = [0.175, 0, 0]
 _MAX_CLEARANCE = 0.02
 _PHASE_NUM = 500
 _WITH_OPTIMIZATION = True
+_FOOT_STEP_DISP = np.array([[0.3,     0,    0], #FR
+                            [  0,     0,    0], #FL
+                            [  0,     0,    0], #RR
+                            [  0,     0,    0]]) #RL
 
 def _setup_controller(robot):
   """Demonstrates how to create a locomotion controller."""
@@ -55,7 +59,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
     p.connect(p.GUI, options="--width=1280 --height=720 --mp4=\"%s.mp4\" --mp4fps=100"%video_name)
     p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING,1)
   else:
-    p = bullet_client.BulletClient(connection_mode=pybullet.GUI)    
+    p = bullet_client.BulletClient(connection_mode=pybullet.GUI)
   p.configureDebugVisualizer(p.COV_ENABLE_GUI,0)
   p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,0)
   p.setAdditionalSearchPath(pd.getDataPath())
@@ -70,7 +74,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
   p.resetDebugVisualizerCamera(cameraDistance=0.45,
                                cameraYaw=0,
                                cameraPitch=0,
-                               cameraTargetPosition=[_OBSTACLE_POS[0],0,0.1])
+                               cameraTargetPosition=[_OBSTACLE_POS[0], 0, 0.08])
     
   planeShape = p.createCollisionShape(shapeType=p.GEOM_PLANE)
   ground_id  = p.createMultiBody(0, planeShape)
@@ -90,10 +94,7 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
   foot_init_positions[2] = [-0.18, -0.16, -robot_base_height + foot_size] #RR
   foot_init_positions[3] = [-0.18, 0.16, -robot_base_height + foot_size] #RL
 
-  foot_target_positions = foot_init_positions + np.array([[0.3, 0, 0], #FR
-                                                          [0, 0, 0], #FL
-                                                          [0, 0, 0], #RR
-                                                          [0, 0, 0]]) #RL
+  foot_target_positions = foot_init_positions + _FOOT_STEP_DISP
 
   init_time = time.time()
   while time.time() - init_time < 0.1:
@@ -123,8 +124,8 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
                                        isSingleFRLeg=True,
                                        withObstacle=_WITH_OBSTACLE,
                                        withOptimization=_WITH_OPTIMIZATION)
-  with open('foot_path.txt', 'w') as f:
-    np.savetxt(f, foot_path[:, 0, :], delimiter=',')
+  # with open('foot_path.txt', 'w') as f:
+  #   np.savetxt(f, foot_path[:, 0, :], delimiter=',')
 
   init_time = time.time()
   while time.time() - init_time < 1:

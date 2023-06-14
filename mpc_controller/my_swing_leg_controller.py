@@ -70,82 +70,81 @@ def gen_phase_foot_path_trajectory(input_phase: float, start_pos: Sequence[float
   return (x, y, z)  # pytype: disable=bad-return-type
 
 def select_points(a, n):
-    """Selects n points from the input array a."""
+  """Selects n points from the input array a."""
 
-    if n <= 0 or n > len(a):
-        raise ValueError('n must be between 1 and the length of the input array')
-    
-    step = (len(a) - 1)//(n - 1)
+  if n <= 0 or n > len(a):
+      raise ValueError('n must be between 1 and the length of the input array')
+  
+  step = (len(a) - 1)//(n - 1)
 
-    indices = np.arange(0, len(a), step, dtype=int)
-    if len(indices) < n:
-        indices = np.append(indices, len(a)-1)
-    indices = indices[:n]
-    
-    return a[indices]
+  indices = np.arange(0, len(a), step, dtype=int)
+  if len(indices) < n:
+      indices = np.append(indices, len(a)-1)
+  indices = indices[:n]
+  
+  return a[indices]
 
 def find_insertion_index(arr, num):
-    return bisect.bisect_left(arr, num)
+  return bisect.bisect_left(arr, num)
 
 def minimum_jerk_traj_gen(piece_num,
                           init_pos, init_vel, init_acc,
                           target_pos, target_vel, target_acc,
                           intermediate_positions,
                           control_time_vector):
-    # Allocate the M, b matrices with zeros.
-    M = np.zeros((piece_num*6, piece_num*6))
-    b = np.zeros((piece_num*6, 3))
+  # Allocate the M, b matrices with zeros.
+  M = np.zeros((piece_num*6, piece_num*6))
+  b = np.zeros((piece_num*6, 3))
 
-    # Set the initial conditions.
-    F_0 = np.array([[1, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 2]])
-    # print(F_0)
-    M[:3, :3] = F_0
+  # Set the initial conditions.
+  F_0 = np.array([[1, 0, 0],
+                  [0, 1, 0],
+                  [0, 0, 2]])
+  # print(F_0)
+  M[:3, :3] = F_0
 
-    # Stacking initial position, velocity, and acceleration.
-    D_0 = np.vstack((init_pos, init_vel, init_acc)).reshape(3,3)
-    b[:3, :] = D_0
+  # Stacking initial position, velocity, and acceleration.
+  D_0 = np.vstack((init_pos, init_vel, init_acc)).reshape(3,3)
+  b[:3, :] = D_0
 
-    # Set the endpoint conditions.
-    t_m = control_time_vector[piece_num-1]
-    E_M = np.array([[1,      t_m,    t_m**2,    t_m**3,    t_m**4,    t_m**5],
-                    [0,        1,     2*t_m,  3*t_m**2,  4*t_m**3,  5*t_m**4],
-                    [0,        0,         2,     6*t_m, 12*t_m**2, 20*t_m**3]
-    ])
-    M[piece_num*6-3:piece_num*6, piece_num*6-6:piece_num*6] = E_M
+  # Set the endpoint conditions.
+  t_m = control_time_vector[piece_num-1]
+  E_M = np.array([[1,      t_m,    t_m**2,    t_m**3,    t_m**4,    t_m**5],
+                  [0,        1,     2*t_m,  3*t_m**2,  4*t_m**3,  5*t_m**4],
+                  [0,        0,         2,     6*t_m, 12*t_m**2, 20*t_m**3]])
+  M[piece_num*6-3:piece_num*6, piece_num*6-6:piece_num*6] = E_M
 
-    # Stacking target position, velocity, and acceleration.
-    D_M = np.vstack((target_pos, target_vel, target_acc)).reshape(3,3)
-    b[piece_num*6-3:piece_num*6, :] = D_M
+  # Stacking target position, velocity, and acceleration.
+  D_M = np.vstack((target_pos, target_vel, target_acc)).reshape(3,3)
+  b[piece_num*6-3:piece_num*6, :] = D_M
 
-    # Set the intermediate conditions.
-    for i in range(1, piece_num):
-        t_i = control_time_vector[i-1]
-        E_i = np.array([[1,      t_i,    t_i**2,    t_i**3,    t_i**4,    t_i**5],
-                        [1,      t_i,    t_i**2,    t_i**3,    t_i**4,    t_i**5],
-                        [0,        1,     2*t_i,  3*t_i**2,  4*t_i**3,  5*t_i**4],
-                        [0,        0,         2,     6*t_i, 12*t_i**2, 20*t_i**3],
-                        [0,        0,         0,         6,    24*t_i, 60*t_i**2],
-                        [0,        0,         0,         0,        24,   120*t_i]])
+  # Set the intermediate conditions.
+  for i in range(1, piece_num):
+    t_i = control_time_vector[i-1]
+    E_i = np.array([[1,      t_i,    t_i**2,    t_i**3,    t_i**4,    t_i**5],
+                    [1,      t_i,    t_i**2,    t_i**3,    t_i**4,    t_i**5],
+                    [0,        1,     2*t_i,  3*t_i**2,  4*t_i**3,  5*t_i**4],
+                    [0,        0,         2,     6*t_i, 12*t_i**2, 20*t_i**3],
+                    [0,        0,         0,         6,    24*t_i, 60*t_i**2],
+                    [0,        0,         0,         0,        24,   120*t_i]])
 
-        F_i = np.array([[ 0,   0,   0,   0,   0,   0],
-                        [-1,   0,   0,   0,   0,   0],
-                        [ 0,  -1,   0,   0,   0,   0],
-                        [ 0,   0,  -2,   0,   0,   0],
-                        [ 0,   0,   0,  -6,   0,   0],
-                        [ 0,   0,   0,   0, -24,   0]])
+    F_i = np.array([[ 0,   0,   0,   0,   0,   0],
+                    [-1,   0,   0,   0,   0,   0],
+                    [ 0,  -1,   0,   0,   0,   0],
+                    [ 0,   0,  -2,   0,   0,   0],
+                    [ 0,   0,   0,  -6,   0,   0],
+                    [ 0,   0,   0,   0, -24,   0]])
 
-        # Fetch the intermediate positions.
-        D_i = intermediate_positions[i-1,:].reshape(1,3)
-        # print("D_i is: ", D_i)
-        M[6*i-3:6*i+3, (i-1)*6:i*6] = E_i
-        M[6*i-3:6*i+3, 6*i:6*i+6] = F_i
-        b[6*i-3:6*i-2, :] = D_i
+    # Fetch the intermediate positions.
+    D_i = intermediate_positions[i-1,:].reshape(1,3)
+    # print("D_i is: ", D_i)
+    M[6*i-3:6*i+3, (i-1)*6:i*6] = E_i
+    M[6*i-3:6*i+3, 6*i:6*i+6] = F_i
+    b[6*i-3:6*i-2, :] = D_i
 
-    coefficient_matrix = np.linalg.inv(M)@b
+  coefficient_matrix = np.linalg.inv(M)@b
 
-    return coefficient_matrix
+  return coefficient_matrix
 
 def optimizing_foot_path(all_points, time_allocation_vector, control_points_num, take_points_num):
     """Relocate points
@@ -171,27 +170,35 @@ def optimizing_foot_path(all_points, time_allocation_vector, control_points_num,
                                                init_pos=control_points[0,:],
                                                init_vel=np.array([0, 0, 0]),
                                                init_acc=np.array([0, 0, 0]),
-                                               target_pos=control_points[control_points_num-1,:],
+                                               target_pos=control_points[-1,:],
                                                target_vel=np.array([0, 0, 0]),
                                                target_acc=np.array([0, 0, 0]),
-                                               intermediate_positions=control_points[1:control_points_num-1,:],
+                                               intermediate_positions=control_points[1:-1,:],
                                                control_time_vector=np.ones(control_points_num)*control_time_interval)
-    
+    print("coefficient_matrix is: ", coefficient_matrix)
     opt_points = np.zeros((take_points_num, 3))
     
     for i in range(take_points_num):
-        t_abs = control_time_vector[-1]/take_points_num*i
-        j = find_insertion_index(control_time_vector, t_abs)
-        if j == 0:
-            j = 1
-        t = t_abs%control_time_interval
-        t_array = np.array([[1, t, t**2, t**3, t**4, t**5]]).reshape(1,6)
+      t_abs = control_time_vector[-1]/take_points_num*i
+      j = find_insertion_index(control_time_vector, t_abs)
 
-        opt_points[i,0] = t_array @ coefficient_matrix[j*6-6:j*6,0]
-        opt_points[i,1] = t_array @ coefficient_matrix[j*6-6:j*6,1]
-        opt_points[i,2] = t_array @ coefficient_matrix[j*6-6:j*6,2]
+      # j = int(t_abs/control_time_interval)
+      if j == 0:
+        j = 1
+      t = t_abs%control_time_interval
+      t_array = np.array([[1, t, t**2, t**3, t**4, t**5]]).reshape(1,6)
+
+      opt_points[i,0] = t_array @ coefficient_matrix[j*6-6:j*6,0]
+      opt_points[i,1] = t_array @ coefficient_matrix[j*6-6:j*6,1]
+      opt_points[i,2] = t_array @ coefficient_matrix[j*6-6:j*6,2]
+
+    # correction
+    for i in range(control_points_num-1):
+      opt_points[i*int(take_points_num/(control_points_num-1)), :] = opt_points[i*int(take_points_num/(control_points_num-1)) - 1, :]
+    opt_points[-1,:] = all_points[-1,:]
+
     with open("foot_opt_path.txt", 'w') as f:
-       np.savetxt(f, opt_points)
+      np.savetxt(f, opt_points, delimiter=',')
     return opt_points
 
 def collision_check(foot_pos, leg_size, obstacle_pos, obstacle_size):
@@ -202,10 +209,11 @@ def collision_check(foot_pos, leg_size, obstacle_pos, obstacle_size):
   checkpoint_2_XZ = np.array([obstacle_pos[0] + obstacle_size[0]/2, 
                               obstacle_pos[2] + obstacle_size[2]])
   foot_pos_XZ = np.array([foot_pos[0], foot_pos[2]])
-  if np.linalg.norm(foot_pos_XZ - checkpoint_1_XZ) <= leg_size:
+  k = 0.5
+  if np.linalg.norm(foot_pos_XZ - checkpoint_1_XZ) <= leg_size + k * obstacle_size[0]:
       # print("Collision detected!")
       return True
-  elif np.linalg.norm(foot_pos_XZ - checkpoint_2_XZ) <= leg_size:
+  elif np.linalg.norm(foot_pos_XZ - checkpoint_2_XZ) <= leg_size + k * obstacle_size[0]:
       # print("Collision detected!")
       return True
   return False
@@ -294,7 +302,7 @@ class MySwingLegController(leg_controller.LegController):
         return foot_path
     
     isCollision = True
-    leg_size = 0.03
+    leg_size = 0.02
     while isCollision:
       foot_path = self._get_foot_path(foot_init_positions, foot_target_positions, isSingleFRLeg, max_clearance=max_clearance, phase_num=phase_num)
       collision = False
@@ -309,10 +317,11 @@ class MySwingLegController(leg_controller.LegController):
           break
       if not collision:
         isCollision = False
-    
+    with open('foot_path.txt', 'w') as f:
+      np.savetxt(f, foot_path[:, 0, :], delimiter=',')
     if withOptimization:
       foot_path[:, 0, :] = optimizing_foot_path(all_points=foot_path[:, 0, :],
-                                                time_allocation_vector=np.linspace(0, 1, phase_num),
+                                                time_allocation_vector=np.linspace(0, 1, phase_num, endpoint=False) + 1/phase_num,
                                                 control_points_num=5,
                                                 take_points_num=phase_num)
       return foot_path
