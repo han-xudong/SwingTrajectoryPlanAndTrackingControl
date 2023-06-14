@@ -74,11 +74,11 @@ The results are in the folder `./results`. Different results are collected in di
 
 The following figures show the swing trajectories with different foot displacements. The displacements are (0.1, -0.1, 0), (0.1, 0, 0), (0.1, 0.1, 0), (0.2, -0.1, 0), (0.2, 0, 0), (0.2, 0.1, 0), (0.3, -0.1, 0), (0.3, 0, 0), and (0.3, 0.1, 0). Here we show the trajectories with and without optimization.
 
-![swing_trajectory_1](./results/my_swing_example_disp_0.1_-0.1_0.0_optimized/my_swing_example_disp_0.1_-0.1_0.0_optimized.png)![swing_trajectory_2](./results/my_swing_example_disp_0.1_0.0_0.0_optimized/my_swing_example_disp_0.1_0.0_0.0_optimized.png)![swing_trajectory_3](./results/my_swing_example_disp_0.1_0.1_0.0_optimized/my_swing_example_disp_0.1_0.1_0.0_optimized.png)
+![swing_trajectory_1](./results/my_swing_example_disp_0.10_-0.10_optimized/path_disp_0.10_-0.10_optimized.png)![swing_trajectory_2](./results/my_swing_example_disp_0.10_0.00_optimized/path_disp_0.10_0.00_optimized.png)![swing_trajectory_3](./results/my_swing_example_disp_0.10_0.10_optimized/path_disp_0.10_0.10_optimized.png)
 
-![swing_trajectory_4](./results/my_swing_example_disp_0.2_-0.1_0.0_optimized/my_swing_example_disp_0.2_-0.1_0.0_optimized.png)![swing_trajectory_5](./results/my_swing_example_disp_0.2_0.0_0.0_optimized/my_swing_example_disp_0.2_0.0_0.0_optimized.png)![swing_trajectory_6](./results/my_swing_example_disp_0.2_0.1_0.0_optimized/my_swing_example_disp_0.2_0.1_0.0_optimized.png)
+![swing_trajectory_4](./results/my_swing_example_disp_0.20_-0.10_optimized/path_disp_0.20_-0.10_optimized.png)![swing_trajectory_5](./results/my_swing_example_disp_0.20_0.00_optimized/path_disp_0.20_0.00_optimized.png)![swing_trajectory_6](./results/my_swing_example_disp_0.20_0.10_optimized/path_disp_0.20_0.10_optimized.png)
 
-![swing_trajectory_7](./results/my_swing_example_disp_0.3_-0.1_0.0_optimized/my_swing_example_disp_0.3_-0.1_0.0_optimized.png)![swing_trajectory_8](./results/my_swing_example_disp_0.3_0.0_0.0_optimized/my_swing_example_disp_0.3_0.0_0.0_optimized.png)![swing_trajectory_9](./results/my_swing_example_disp_0.3_0.1_0.0_optimized/my_swing_example_disp_0.3_0.1_0.0_optimized.png)
+![swing_trajectory_7](./results/my_swing_example_disp_0.30_-0.10_optimized/path_disp_0.30_-0.10_optimized.png)![swing_trajectory_8](./results/my_swing_example_disp_0.30_0.00_optimized/path_disp_0.30_0.00_optimized.png)![swing_trajectory_9](./results/my_swing_example_disp_0.30_0.10_optimized/path_disp_0.30_0.10_optimized.png)
 
 ### Single leg swing trajectory with different obstacles
 
