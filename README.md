@@ -15,7 +15,7 @@ Install dependencies:
 - Install MPI: `sudo apt install libopenmpi-dev`
 - Install requirements: `pip3 install -r requirements.txt`
 
-and it should be good to go.
+You can run `mpc_controller/my_swing_example.py` to get a quickstart.
 
 ## Finding a feasible trajectory connecting the initial and final positions
 
