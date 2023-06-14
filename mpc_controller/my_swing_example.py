@@ -25,13 +25,13 @@ _MAX_TIME_SECONDS = 8
 _NUM_BULLET_SOLVER_ITERATIONS = 30
 _SIMULATION_TIME_STEP = 0.001
 _ROBOT_BASE_HEIGHT = 0.33
-_WITH_OBSTACLE = False
+_WITH_OBSTACLE = True
 _OBSTACLE_SIZE = [0.015, 1, 0.03] # thickness, width, height
 _OBSTACLE_POS = [0.175, 0, 0]
 _MAX_CLEARANCE = 0.02
 _PHASE_NUM = 500
 _WITH_OPTIMIZATION = True
-_FOOT_STEP_DISP = np.array([[0.2,     0,    0],   #FR
+_FOOT_STEP_DISP = np.array([[0.3,     0,    0],   #FR
                             [  0,     0,    0],   #FL
                             [  0,     0,    0],   #RR
                             [  0,     0,    0]])  #RL
@@ -135,10 +135,12 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
     init_action = controller.get_action(foot_init_positions)
     robot.Step(init_action)
   
-  foot_current_position = np.array(robot.GetFootPositionsInWorldFrame())
+  foot_current_position_in_world_frame = np.array(robot.GetFootPositionsInWorldFrame())
+  foot_current_position_in_base_frame = np.array(robot.GetFootPositionsInBaseFrame())
   with open('%sfoot_real_path%s.txt'%(_SAVE_PATH, _PARAMETERS), 'w') as f:
-    np.savetxt(f, foot_current_position[0].reshape(1, 3), delimiter=',')
-  foot_real_path_list = [foot_current_position]
+    np.savetxt(f, foot_current_position_in_base_frame[0].reshape(1, 3), delimiter=',')
+  foot_real_path_list_in_world_frame = [foot_current_position_in_world_frame]
+  foot_real_path_list_in_base_frame = [foot_current_position_in_base_frame]
   cnt = 0
   current_time = robot.GetTimeSinceReset()
   while current_time < max_time:
@@ -153,10 +155,10 @@ def _run_example(max_time=_MAX_TIME_SECONDS):
     foot_current_position = np.array(robot.GetFootPositionsInWorldFrame())
     with open('%sfoot_real_path%s.txt'%(_SAVE_PATH, _PARAMETERS), 'a') as f:
       np.savetxt(f, foot_current_position[0].reshape(1, 3), delimiter=',')
-    foot_real_path_list.append(foot_current_position)
-    if foot_real_path_list.__len__() > 1:
-      p.addUserDebugLine(foot_real_path_list[-2][0],
-                         foot_real_path_list[-1][0],
+    foot_real_path_list_in_world_frame.append(foot_current_position)
+    if foot_real_path_list_in_world_frame.__len__() > 1:
+      p.addUserDebugLine(foot_real_path_list_in_world_frame[-2][0],
+                         foot_real_path_list_in_world_frame[-1][0],
                          lineColorRGB=[1, 0, 0],
                          lifeTime=20,
                          lineWidth=3)
