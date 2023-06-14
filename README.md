@@ -17,7 +17,8 @@ Install dependencies:
 
 You can run `mpc_controller/my_swing_example.py` to get a quickstart.
 
-Here are the definitions of the varibles:
+Here are the definitions of the importtant varibles in `mpc_controller/my_swing_example.py`:
+
 `_RECORD_VIDEO`: `True` or `False` to record a video of the simulation process or not, which requires ffmpeg in the path.
 
 `_MAX_TIME_SECONDS`: the maximum running time (seconds) of the simulatioin process.
