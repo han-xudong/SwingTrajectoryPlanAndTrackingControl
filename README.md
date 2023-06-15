@@ -1,6 +1,8 @@
 # SwingTrajectoryPlanAndTrackingControl
 
-In this project, we focus on the planning and control for the swing trajectories.
+In this project, we focus on the planning and control of the swing trajectories. The trajectories are generated for a single swing leg of a base-fixed quadruped robot (Unitree A1), and also optionally could regenerated for collision avoidance and trajectory optimization.
+
+This is a course project of [MEE5114 Advanced Control for Robotics](https://www.wzhanglab.site/teaching/advanced-control-for-robotics-sp23/) in [SUSTech](https://www.sustech.edu.cn/en/).
 
 The codes are based on: <https://xbpeng.github.io/projects/Robotic_Imitation/index.html>
 
@@ -56,7 +58,7 @@ In `mpc_controller/my_swing_example.py`, the initial positions of the 4 foot tip
 
 We also provide an optimization method to find a better trajectory. To use the optimization method, `_WITH_OPTIMIZATION` need to be `True`. You can find the modules `optimizing_foot_path` in `mpc_controller/my_swing_leg_controller.py`. The optimization method is not always successful especially too much control points input, but it can find a better trajectory when it is successful.
 
-The results are in the folder `./results`. Different results are collected in different folders in the format of `my_swing_example_disp_` + `_FOOT_STEP_DISP[0][0]` + `_FOOT_STEP_DISP[0][1]` + `_optimized`(optional based on `_WITH_OPTIMIZATION`).
+The results are in the folder `./results`. Different results are collected in different folders in the format of `my_swing_example_disp_` + `_FOOT_STEP_DISP[0][0]` + `_FOOT_STEP_DISP[0][1]` + `_optimized`(optionally based on `_WITH_OPTIMIZATION`).
 
 ## Finding a collision-free trajectory when there are known obstacles
 
@@ -66,7 +68,7 @@ In `mpc_controller/my_swing_example.py`, to show an obstacle, which is a cuboid,
 
 The module `collision_check` in `mpc_controller/my_swing_leg_controller.py` is to check whether the generated swing path is collision-free or not, and if not, the path is regenerated until it is collision-free.
 
-The results are in the folder `./results`. Different results are collected in different folders in the format of `my_swing_example_disp_` + `_FOOT_STEP_DISP[0][0]` (displacement in x direction) + `_FOOT_STEP_DISP[0][1]` (displacement in y direction) + `_obstacle_` + `_OBSTACLE_HALF_SIZE`*2 (the height of the obstacle) + `_optimized`(optional based on `_WITH_OPTIMIZATION`).
+The results are in the folder `./results`. Different results are collected in different folders in the format of `my_swing_example_disp_` + `_FOOT_STEP_DISP[0][0]` (displacement in x direction) + `_FOOT_STEP_DISP[0][1]` (displacement in y direction) + `_obstacle_` + `_OBSTACLE_HALF_SIZE`*2 (the height of the obstacle) + `_optimized`(optionally based on `_WITH_OPTIMIZATION`).
 
 ## Results
 
