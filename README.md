@@ -4,7 +4,7 @@ In this project, we focus on the planning and control of the swing trajectories.
 
 This is a course project of [MEE5114 Advanced Control for Robotics](https://www.wzhanglab.site/teaching/advanced-control-for-robotics-sp23/) in [SUSTech](https://www.sustech.edu.cn/en/).
 
-The codes are based on: [Learning Agile Robotic Locomotion Skills by Imitating Animals](https://xbpeng.github.io/projects/Robotic_Imitation/index.html)
+The codes are based on [Learning Agile Robotic Locomotion Skills by Imitating Animals](https://xbpeng.github.io/projects/Robotic_Imitation/index.html) by Xue Bin Peng et al.
 
 ## Getting Started
 
