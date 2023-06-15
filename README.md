@@ -2,7 +2,7 @@
 
 In this project, we focus on the planning and control of the swing trajectories. The trajectories are generated for a single swing leg of a base-fixed quadruped robot (Unitree A1), and also optionally could regenerated for collision avoidance and trajectory optimization.
 
-This is a course project of [MEE5114 Advanced Control for Robotics](https://www.wzhanglab.site/teaching/advanced-control-for-robotics-sp23/) in [SUSTech](https://www.sustech.edu.cn/en/).
+This is a course project of [MEE5114 Advanced Control for Robotics](https://www.wzhanglab.site/teaching/advanced-control-for-robotics-sp23/) in [SUSTech](https://www.sustech.edu.cn/en/) by [Xudong Han](https://github.com/hanxudong159), [Geek2000IRX](https://github.com/Geek2000IRX), and [LunaceC](https://github.com/LunaceC).
 
 The codes are based on [Learning Agile Robotic Locomotion Skills by Imitating Animals](https://xbpeng.github.io/projects/Robotic_Imitation/index.html) by Xue Bin Peng et al.
 
