@@ -89,3 +89,11 @@ The following figures show the swing trajectories with different obstacles. The 
 <img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.30_0.00_obstacle_0.06_optimized/my_swing_example_disp_0.30_0.00_obstacle_0.06_optimized.gif"/>
 
 <img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.30_0.00_obstacle_0.08_optimized/my_swing_example_disp_0.30_0.00_obstacle_0.08_optimized.gif"/>
+
+## References
+
+- Jorge Ferreira et al. “A survey on localization, mapping, and trajectory planning for quadruped robots in vineyards”. In: 2022 IEEE International Conference on Autonomous Robot Systems and Competitions (ICARSC). IEEE. 2022, pp. 237–242.
+- Mrinal Kalakrishnan et al. “Learning, planning, and control for quadruped locomotion over challenging terrain”. In: The International Journal of Robotics Research 30.2 (2011), pp. 236–258.
+- Xue Bin Peng et al. “Learning agile robotic locomotion skills by imitating animals”. In: arXiv preprint arXiv:2004.00784 (2020).
+- Zhepei Wang et al. “Geometrically constrained trajectory optimization for multicopters”. In: IEEE Transactions on Robotics 38.5 (2022), pp. 3259–3278.
+- Alexander W Winkler et al. “Gait and trajectory optimization for legged systems through phase-based end-effector parameterization”. In: IEEE Robotics and Automation Letters 3.3 (2018), pp. 1560–1
