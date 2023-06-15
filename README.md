@@ -18,7 +18,7 @@ Install dependencies:
 
 - Install requirements: `pip3 install -r requirements.txt`
 
-You can run `mpc_controller/my_swing_example.py` to get a quickstart.
+Run `mpc_controller/my_swing_example.py` to get a quickstart.
 
 Here are the definitions of the importtant varibles in `mpc_controller/my_swing_example.py`:
 
