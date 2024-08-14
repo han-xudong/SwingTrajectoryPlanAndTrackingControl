@@ -2,7 +2,7 @@
 
 In this project, we focus on the planning and control of the swing trajectories. The trajectories are generated for a single swing leg of a base-fixed quadruped robot (Unitree A1), and also optionally could regenerated for collision avoidance and trajectory optimization.
 
-This is a course project of [MEE5114 Advanced Control for Robotics](https://www.wzhanglab.site/teaching/advanced-control-for-robotics-sp23/) in [SUSTech](https://www.sustech.edu.cn/en/) by [Xudong Han](https://github.com/hanxudong159), [Geek2000IRX](https://github.com/Geek2000IRX), and [LunaceC](https://github.com/LunaceC).
+This is a course project of [MEE5114 Advanced Control for Robotics](https://www.wzhanglab.site/teaching/advanced-control-for-robotics-sp23/) in [SUSTech](https://www.sustech.edu.cn/en/) by [Xudong Han](https://github.com/han-xudong), [Geek2000IRX](https://github.com/Geek2000IRX), and [LunaceC](https://github.com/LunaceC).
 
 ## Getting Started
 
@@ -74,19 +74,27 @@ The results are in the folder `./results`. Different results are collected in di
 
 The following figures show the swing trajectories with different foot displacements. The displacements are (0.1, -0.1, 0), (0.1, 0, 0), (0.1, 0.1, 0), (0.2, -0.1, 0), (0.2, 0, 0), (0.2, 0.1, 0), (0.3, -0.1, 0), (0.3, 0, 0), and (0.3, 0.1, 0). Here we show the trajectories with and without optimization.
 
-<img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.10_-0.10_optimized/path_disp_0.10_-0.10_optimized.png" width=250/><img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.10_0.00_optimized/path_disp_0.10_0.00_optimized.png" width=250/><img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.10_0.10_optimized/path_disp_0.10_0.10_optimized.png" width=250/><img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.20_-0.10_optimized/path_disp_0.20_-0.10_optimized.png" width=250/><img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.20_0.00_optimized/path_disp_0.20_0.00_optimized.png" width=250/><img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.20_0.10_optimized/path_disp_0.20_0.10_optimized.png" width=250/><img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.30_-0.10_optimized/path_disp_0.30_-0.10_optimized.png" width=250/><img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.30_0.00_optimized/path_disp_0.30_0.00_optimized.png" width=250/><img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.30_0.10_optimized/path_disp_0.30_0.10_optimized.png" width=250/>
+<img src="results/my_swing_example_disp_0.10_-0.10_optimized/path_disp_0.10_-0.10_optimized.png" width=250/>
+<img src="results/my_swing_example_disp_0.10_0.00_optimized/path_disp_0.10_0.00_optimized.png" width=250/>
+<img src="results/my_swing_example_disp_0.10_0.10_optimized/path_disp_0.10_0.10_optimized.png" width=250/>
+<img src="results/my_swing_example_disp_0.20_-0.10_optimized/path_disp_0.20_-0.10_optimized.png" width=250/>
+<img src="results/my_swing_example_disp_0.20_0.00_optimized/path_disp_0.20_0.00_optimized.png" width=250/>
+<img src="results/my_swing_example_disp_0.20_0.10_optimized/path_disp_0.20_0.10_optimized.png" width=250/>
+<img src="results/my_swing_example_disp_0.30_-0.10_optimized/path_disp_0.30_-0.10_optimized.png" width=250/>
+<img src="results/my_swing_example_disp_0.30_0.00_optimized/path_disp_0.30_0.00_optimized.png" width=250/>
+<img src="results/my_swing_example_disp_0.30_0.10_optimized/path_disp_0.30_0.10_optimized.png" width=250/>
 
 ### Single leg swing trajectory with different obstacles
 
 The following figures show the swing trajectories with different obstacles. The obstacles are cuboids with height of 0.02, 0.04, 0.06, and 0.08 mm. Here we show the trajectories with and without optimization.
 
-<img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.30_0.00_obstacle_0.02_optimized/my_swing_example_disp_0.30_0.00_obstacle_0.02_optimized.gif"/>
+<img src="results/my_swing_example_disp_0.30_0.00_obstacle_0.02_optimized/my_swing_example_disp_0.30_0.00_obstacle_0.02_optimized.gif"/>
 
-<img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.30_0.00_obstacle_0.04_optimized/my_swing_example_disp_0.30_0.00_obstacle_0.04_optimized.gif">
+<img src="results/my_swing_example_disp_0.30_0.00_obstacle_0.04_optimized/my_swing_example_disp_0.30_0.00_obstacle_0.04_optimized.gif">
 
-<img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.30_0.00_obstacle_0.06_optimized/my_swing_example_disp_0.30_0.00_obstacle_0.06_optimized.gif"/>
+<img src="results/my_swing_example_disp_0.30_0.00_obstacle_0.06_optimized/my_swing_example_disp_0.30_0.00_obstacle_0.06_optimized.gif"/>
 
-<img src="https://github.com/hanxudong159/SwingTrajectoryPlanAndTrackingControl/blob/master/results/my_swing_example_disp_0.30_0.00_obstacle_0.08_optimized/my_swing_example_disp_0.30_0.00_obstacle_0.08_optimized.gif"/>
+<img src="results/my_swing_example_disp_0.30_0.00_obstacle_0.08_optimized/my_swing_example_disp_0.30_0.00_obstacle_0.08_optimized.gif"/>
 
 ## References
 
